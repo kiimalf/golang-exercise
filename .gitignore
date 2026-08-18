@@ -1,0 +1,20 @@
+# .gitignore
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.app
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Mac OS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
