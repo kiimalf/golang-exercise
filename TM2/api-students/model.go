@@ -23,10 +23,10 @@ type ReplaceStudentRequest struct {
 }
 
 type PatchStudentRequest struct {
-	Name     string  `json:"name,omitempty"`
-	NIM      string  `json:"nim,omitempty"`
-	Grade    float64 `json:"grade,omitempty"`
-	IsActive bool    `json:"is_active,omitempty"`
+	Name     *string  `json:"name,omitempty"`
+	NIM      *string  `json:"nim,omitempty"`
+	Grade    *float64 `json:"grade,omitempty"`
+	IsActive *bool    `json:"is_active,omitempty"`
 }
 
 type WebResponse struct {
