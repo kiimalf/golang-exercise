@@ -53,7 +53,7 @@ func main() {
 		return c.SendString("Hello World!")
 	})
 
-	api := app.Group("api/v1")
+	api := app.Group("/api/v1")
 
 	api.Get("/health", func(c *fiber.Ctx) error {
 		return ok(c, "Server berjalan", fiber.Map{"timestamp": time.Now()})

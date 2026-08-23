@@ -229,7 +229,7 @@ func deleteUser(c *fiber.Ctx) error {
 		return fail(c, fiber.StatusNotFound, "User tidak ditemukan")
 	}
 
-	users = append(users[:1], users[i+1:]...)
+	users = append(users[:i], users[i+1:]...)
 
 	return noContent(c)
 }

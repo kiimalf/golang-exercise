@@ -72,10 +72,10 @@ func parseListQuery(c *fiber.Ctx) ListQuery {
 		q.Page = 1
 	}
 	if q.Limit < 1 {
-		q.Page = 1
+		q.Limit = 1
 	}
 	if q.Limit > 100 {
-		q.Page = 10
+		q.Limit = 100
 	}
 	if !allowedSort[q.Sort] {
 		q.Sort = "id"
@@ -84,8 +84,8 @@ func parseListQuery(c *fiber.Ctx) ListQuery {
 		q.Order = "asc"
 	}
 
-	if raw := c.Query("is_actice"); raw != "" {
-		if v, err := strconv.ParseBool("raw"); err == nil {
+	if raw := c.Query("is_active"); raw != "" {
+		if v, err := strconv.ParseBool(raw); err == nil {
 			q.IsActive = &v
 		}
 	}

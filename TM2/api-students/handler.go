@@ -92,7 +92,7 @@ func getStudent(c *fiber.Ctx) error {
 
 	i := findStudentIndex(id)
 	if i == -1 {
-		return fail(c, fiber.StatusNotFound, "User tidak ditemukan")
+		return fail(c, fiber.StatusNotFound, "Student tidak ditemukan")
 	}
 	return ok(c, "Student ditemukan", students[i])
 }
@@ -116,13 +116,14 @@ func createStudent(c *fiber.Ctx) error {
 	if req.Grade < 0 || req.Grade > 100 {
 		errs["grade"] = "Harus antara 0 dan 100"
 	}
+	if len(errs) > 0 {
+		return failValidation(c, errs)
+	}
+
 	for _, s := range students {
 		if strings.EqualFold(s.NIM, req.NIM) {
 			return fail(c, fiber.StatusConflict, "NIM sudah digunakan")
 		}
-	}
-	if len(errs) > 0 {
-		return failValidation(c, errs)
 	}
 
 	baru := Student{
@@ -135,8 +136,8 @@ func createStudent(c *fiber.Ctx) error {
 	students = append(students, baru)
 	nextID++
 
-	return created(c, "User berhasil dibuat", baru,
-		"api/v1/student"+strconv.Itoa(baru.ID))
+	return created(c, "Student berhasil dibuat", baru,
+		"/api/v1/students/"+strconv.Itoa(baru.ID))
 }
 
 func replaceStudent(c *fiber.Ctx) error {
@@ -221,6 +222,7 @@ func patchStudent(c *fiber.Ctx) error {
 				return fail(c, fiber.StatusConflict, "NIM sudah digunakan")
 			}
 		}
+		students[i].NIM = *req.NIM
 	}
 	if req.Grade != nil {
 		if *req.Grade < 0 || *req.Grade > 100 {
@@ -245,7 +247,7 @@ func deleteStudent(c *fiber.Ctx) error {
 		return fail(c, fiber.StatusNotFound, "Student tidak ditemukan")
 	}
 
-	students = append(students[:1], students[i+1:]...)
+	students = append(students[:i], students[i+1:]...)
 
 	return noContent(c)
 }
