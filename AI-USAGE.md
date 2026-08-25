@@ -21,3 +21,25 @@ Selain modul dan AI, referensi berikut juga digunakan untuk mendalami pengerjaan
    - Tautan: [https://stackoverflow.com/questions/47296325/passing-by-reference-and-value-in-go-to-functions](https://stackoverflow.com/questions/47296325/passing-by-reference-and-value-in-go-to-functions)
 
 ---
+
+## Pertemuan 2 (TM 2)
+
+### 🤖 Bantuan AI
+Dalam pengerjaan TM 2, AI digunakan sebagai asisten untuk menjelaskan alur kerja API, melakukan *code review*, dan membantu menyusun draf laporan, dengan rincian sebagai berikut:
+- **Penjelasan Modul & Konsep:** Membantu merangkum ulang materi modul, memecah alur *request* dengan diagram visual, dan mempertegas poin penting seperti alasan penggunaan tipe data *pointer* pada metode PATCH dibanding PUT.
+- **Eksplorasi Konsep Tambahan:** Menjelaskan secara teoritis konsep-konsep seputar HTTP dan REST API yang tidak tercantum di modul (seperti *idempotency*, perbedaan JSON Patch vs Merge Patch, *integer division* di Go, serta cara memvalidasi data unik atau duplikat pada *array in-memory* sebelum beralih ke database).
+- **Perancangan Tugas Mandiri:** Memandu alur penyelesaian tugas API Students dari awal hingga penyusunan *query string* untuk paginasi dan filter logika tambahan (seperti batas nilai *grade*).
+- **Code Review & Debugging:** AI digunakan untuk meninjau dan mengevaluasi kode proyek `api-students`. AI berhasil mendeteksi dan mengusulkan perbaikan untuk beberapa *bug* krusial pada logika filter (*typo* parameter *query* dan kesalahan *parsing* boolean), logika *slicing* pada metode DELETE, hingga pencegahan duplikasi NIM (409 Conflict).
+
+### 📚 Referensi Eksternal
+Selain modul dan bantuan AI, referensi eksternal berikut juga digunakan untuk mendukung pengerjaan tugas:
+1. **StackOverflow**: Digunakan sebagai referensi bacaan diskusi tentang pembuatan parameter unik dari *struct* di Go.
+   - Tautan: [https://stackoverflow.com/questions/48253423/unique-hash-from-struct](https://stackoverflow.com/questions/48253423/unique-hash-from-struct)
+2. **Dokumentasi Resmi Go Fiber**: Digunakan untuk membaca panduan dan dokumentasi framework web Fiber versi 2.
+   - Tautan: [https://pkg.go.dev/github.com/gofiber/fiber/v2@v2.52.15](https://pkg.go.dev/github.com/gofiber/fiber/v2@v2.52.15)
+3. **MDN Web Docs (HTTP CORS)**: Digunakan untuk mempelajari landasan teori mengenai *Cross-Origin Resource Sharing* (CORS) dalam protokol HTTP.
+   - Tautan: [https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)
+4. **MDN Web Docs (HTTP General)**: Digunakan untuk mendalami standar komunikasi web berbasis protokol HTTP.
+   - Tautan: [https://developer.mozilla.org/en-US/docs/Web/HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP)
+
+---
