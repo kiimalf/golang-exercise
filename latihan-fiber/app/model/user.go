@@ -1,4 +1,4 @@
-package main
+package model
 
 import "time"
 
@@ -28,8 +28,8 @@ type ReplaceUserRequest struct {
 // PATCH
 type PatchUserRequest struct {
 	Username *string `json:"username,omitempty"`
-	Email    *string `json:"email.omitempty"`
-	IsActive *bool   `json:"is_active.omitempty"`
+	Email    *string `json:"email,omitempty"`
+	IsActive *bool   `json:"is_active,omitempty"`
 }
 
 type WebResponse struct {
@@ -54,4 +54,8 @@ type ListQuery struct {
 	Sort     string
 	Order    string
 	IsActive *bool
+}
+
+func (q ListQuery) Offset() int {
+	return (q.Page - 1) * q.Limit
 }

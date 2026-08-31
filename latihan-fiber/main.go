@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -10,6 +10,10 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+
+	"latihan-fiber/app/repository"
+	"latihan-fiber/config"
+	"latihan-fiber/database"
 )
 
 var metodeBerbody = map[string]bool{
@@ -30,6 +34,17 @@ func requireJSON(c *fiber.Ctx) error {
 }
 
 func main() {
+	config.LoadEnv()
+
+	pool, err := database.NewPool(context.Background())
+	if err != nil {
+		log.Fatalf("database: %v", err)
+	}
+	defer pool.Close()
+
+	userRepository := repository.NewUserRepository(pool)
+	userHandler := NewUserHandler(userRepository)
+
 	app := fiber.New(fiber.Config{
 		AppName: "Praktikum Backend Lanjut - Pertemuan 2",
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -56,21 +71,24 @@ func main() {
 	api := app.Group("api/v1")
 
 	api.Get("/health", func(c *fiber.Ctx) error {
-		return ok(c, "Server berjalan", fiber.Map{"timestamp": time.Now()})
+		ctx, cancel := context.WithTimeout(c.UserContext(), 2*time.Second)
+		defer cancel()
+
+		if err := pool.Ping(ctx); err != nil {
+			return fail(c, fiber.StatusServiceUnavailable,
+				"Database tidak dapat dihubungi")
+		}
+		return ok(c, "Server berjalan", nil)
 	})
 
 	u := api.Group("/users", requireJSON)
-	u.Get("/", listUsers)
-	u.Get("/:id", getUser)
-	u.Post("/", createUser)
-	u.Put("/:id", replaceUser)
-	u.Patch("/:id", patchUser)
-	u.Delete("/:id", deleteUser)
+	u.Get("/", userHandler.List)
+	u.Get("/:id", userHandler.Get)
+	u.Post("/", userHandler.Create)
+	u.Put("/:id", userHandler.Replace)
+	u.Patch("/:id", userHandler.Patch)
+	u.Delete("/:id", userHandler.Delete)
 
-	app.Use(func(c *fiber.Ctx) error {
-		return fail(c, fiber.StatusNotFound, "Endpoint tidak ditemukan")
-	})
-
-	fmt.Println("Server berjalan di http://localhost:3000")
-	log.Fatal(app.Listen(":3000"))
+	port := config.GetEnv("APP_PORT", "3000")
+	log.Fatal(app.Listen(":" + port))
 }
