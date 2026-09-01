@@ -43,3 +43,25 @@ Selain modul dan bantuan AI, referensi eksternal berikut juga digunakan untuk me
    - Tautan: [https://developer.mozilla.org/en-US/docs/Web/HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP)
 
 ---
+## Pertemuan 3 (TM 3)
+
+### 🤖 Bantuan AI
+Dalam pengerjaan TM 3, AI digunakan sebagai tutor arsitektur, pemandu migrasi kode, serta asisten pengujian, dengan rincian sebagai berikut:
+- **Penjelasan Modul & Konsep Database:** Membantu membedah isi modul mengenai pola *Repository* dan integrasi PostgreSQL. AI memberikan penjelasan mendalam (*deep dive*) tentang properti ACID, perbedaan `pgx` dengan `database/sql`, mekanisme *parameterized query* untuk mencegah SQL *Injection*, serta bahaya performa pada perintah `OFFSET`.
+- **Eksplorasi Konsep Tambahan:** Menjelaskan secara teoritis fungsi klausul `WHERE 1 = 1` dalam penyusunan query dinamis, cara kerja pemetaan (*scanning*) data hasil query ke dalam *struct* dengan pointer, dan pemahaman terkait pembongkaran error berlapis (*error wrapping*) menggunakan fungsi `errors.As()`.
+- **Perancangan & Migrasi Tugas Mandiri:** Memberikan panduan *step-by-step* untuk memigrasikan API `api-students` dari penyimpanan memori (TM 2) ke database relasional. Panduan ini mencakup perombakan *handler*, pembuatan interface *repository*, penyusunan migrasi SQL yang aman (*Unique Index*), serta injeksi dependensi.
+- **Code Review & Debugging:** AI digunakan untuk meninjau proyek akhir TM 3. AI berhasil mendeteksi dan mengusulkan perbaikan terhadap *bug* pemetaan target tabel saat operasi DELETE, dan perbaikan penulisan target pointer (`*req.NIM`) saat operasi validasi di dalam metode PATCH.
+- **Pengujian (Testing):** Membantu menyusun rancangan perintah pengujian via cURL untuk 21 skenario, serta menyusun panduan penggunaan *Insomnia REST Client* untuk skenario duplikasi data, filter SQL Injection, hingga kasus database *down* (500/503).
+
+### 📚 Referensi Eksternal
+Selain modul dan bantuan AI, referensi eksternal berikut juga digunakan untuk mendukung pengerjaan tugas:
+1. **Dokumentasi pgxpool (v5)**: Digunakan untuk mempelajari cara mengonfigurasi dan menggunakan *connection pool* pada driver PostgreSQL `pgx` versi 5.
+   - Tautan: [https://pkg.go.dev/github.com/jackc/pgx/v5/pgxpool](https://pkg.go.dev/github.com/jackc/pgx/v5/pgxpool)
+2. **Dokumentasi pgx**: Digunakan untuk membaca panduan standar terkait implementasi koneksi Go dan PostgreSQL.
+   - Tautan: [https://pkg.go.dev/github.com/jackc/pgx](https://pkg.go.dev/github.com/jackc/pgx)
+3. **Daftar Kode Error PostgreSQL**: Digunakan untuk mempelajari kode-kode *error* bawaan PostgreSQL, khususnya terkait pelanggaran konstrain unik (`23505`).
+   - Tautan: [https://www.postgresql.org/docs/current/errcodes-appendix.html](https://www.postgresql.org/docs/current/errcodes-appendix.html)
+4. **RFC 9110 (HTTP Semantics)**: Digunakan sebagai pedoman standar terbaru terkait definisi dan semantik kode status HTTP, khususnya untuk memvalidasi penggunaan status 503 (*Service Unavailable*).
+   - Tautan: [https://www.rfc-editor.org/info/rfc9110/](https://www.rfc-editor.org/info/rfc9110/)
+
+---
