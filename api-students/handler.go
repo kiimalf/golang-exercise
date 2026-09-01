@@ -98,7 +98,7 @@ func (h *StudentHandler) Create(c *fiber.Ctx) error {
 		Name:     req.Name,
 		NIM:      req.NIM,
 		Grade:    req.Grade,
-		IsActive: true,
+		IsActive: req.IsActive,
 	})
 	if err != nil {
 		return terjemahkanError(c, err, "Gagal menyimpan student")
@@ -180,7 +180,7 @@ func (h *StudentHandler) Patch(c *fiber.Ctx) error {
 	}
 
 	if req.NIM != nil {
-		if strings.TrimSpace(*req.Name) == "" {
+		if strings.TrimSpace(*req.NIM) == "" {
 			return failValidation(c, map[string]string{"nim": "Tidak boleh kosong"})
 		}
 		saatIni.NIM = *req.NIM

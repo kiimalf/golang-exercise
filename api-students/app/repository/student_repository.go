@@ -169,7 +169,7 @@ func (r *studentPostgresRepository) Update(
 }
 
 func (r *studentPostgresRepository) Delete(ctx context.Context, id int) error {
-	tag, err := r.pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
+	tag, err := r.pool.Exec(ctx, `DELETE FROM students WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("Menghapus student: %w", err)
 	}
