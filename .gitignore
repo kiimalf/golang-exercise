@@ -8,6 +8,7 @@
 *.out
 *.app
 *.env
+*/logs
 
 # Go workspace file
 go.work
@@ -19,3 +20,6 @@ go.work.sum
 # IDEs
 .vscode/
 .idea/
+
+# Docs
+docs/
