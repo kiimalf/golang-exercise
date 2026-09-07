@@ -32,16 +32,11 @@ func (s *StudentService) List(c *fiber.Ctx) error {
 			"Gagal mengambil data student")
 	}
 
-	totalPages := 0
-	if q.Limit > 0 {
-		totalPages = (total + q.Limit - 1) / q.Limit
-	}
-
 	return helper.SuccessList(c, "Daftar Student berhasil diambil", students, &model.Meta{
 		Page:       q.Page,
 		Limit:      q.Limit,
 		Total:      total,
-		TotalPages: totalPages,
+		TotalPages: CountTotalPages(total, q.Limit),
 	})
 }
 
@@ -83,7 +78,7 @@ func (s *StudentService) Create(c *fiber.Ctx) error {
 		Name:     req.Name,
 		NIM:      req.NIM,
 		Grade:    req.Grade,
-		IsActive: true,
+		IsActive: req.IsActive,
 	})
 	if err != nil {
 		return translateError(c, err, "Gagal menyimpan Student")

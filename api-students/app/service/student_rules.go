@@ -28,6 +28,9 @@ func ValidateCreate(req model.CreateStudentRequest) map[string]string {
 func ValidateReplace(req model.ReplaceStudentRequest) map[string]string {
 	errs := map[string]string{}
 
+	req.Name = strings.TrimSpace(req.Name)
+	req.NIM = strings.TrimSpace(req.NIM)
+
 	if req.Name == "" {
 		errs["name"] = "Wajib diisi pada PUT"
 	}
@@ -49,22 +52,25 @@ func ApplyPatch(
 	if req.Name != nil {
 		if strings.TrimSpace(*req.Name) == "" {
 			errs["name"] = "Tidak boleh kosong"
+		} else {
+			current.Name = *req.Name
 		}
-		current.Name = *req.Name
 	}
 
 	if req.NIM != nil {
 		if strings.TrimSpace(*req.NIM) == "" {
 			errs["nim"] = "Tidak boleh kosong"
+		} else {
+			current.NIM = *req.NIM
 		}
-		current.NIM = *req.NIM
 	}
 
 	if req.Grade != nil {
 		if *req.Grade < 0 || *req.Grade > 100 {
 			errs["grade"] = "Harus antara 0 dan 100"
+		} else {
+			current.Grade = *req.Grade
 		}
-		current.Grade = *req.Grade
 	}
 
 	if req.IsActive != nil {

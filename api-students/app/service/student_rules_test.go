@@ -46,3 +46,16 @@ func TestApplyPatch(t *testing.T) {
 		t.Error("Field yang tidak dikirim seharusnya tidak berubah")
 	}
 }
+
+func TestValidateCreate(t *testing.T) {
+	errs := ValidateCreate(model.CreateStudentRequest{
+		Name:     "andi",
+		NIM:      "123",
+		Grade:    19,
+		IsActive: true,
+	})
+
+	if len(errs) != 0 {
+		t.Errorf("Tidak seharusnya ada error: %v", errs)
+	}
+}
