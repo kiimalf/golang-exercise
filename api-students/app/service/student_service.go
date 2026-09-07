@@ -16,7 +16,7 @@ type StudentService struct {
 	repo repository.StudentRepository
 }
 
-func NewStudentHandler(repo repository.StudentRepository) *StudentService {
+func NewStudentService(repo repository.StudentRepository) *StudentService {
 	return &StudentService{repo: repo}
 }
 
