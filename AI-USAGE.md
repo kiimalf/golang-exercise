@@ -65,3 +65,26 @@ Selain modul dan bantuan AI, referensi eksternal berikut juga digunakan untuk me
    - Tautan: [https://www.rfc-editor.org/info/rfc9110/](https://www.rfc-editor.org/info/rfc9110/)
 
 ---
+
+## Pertemuan 4 (TM 4)
+
+### 🤖 Bantuan AI
+Dalam pengerjaan TM 4, AI digunakan sebagai tutor arsitektur, *code reviewer*, serta asisten refactoring, dengan rincian sebagai berikut:
+- **Penjelasan Modul & Konsep Arsitektur:** Membantu membedah isi modul mengenai *Clean Architecture*. AI memberikan penjelasan mendalam tentang empat *layer* arsitektur, *Dependency Rule*, penerapan *Dependency Inversion* menggunakan *interface*, serta kaitannya dengan prinsip desain *SOLID*.
+- **Eksplorasi Konsep Tambahan:** Menjelaskan secara teoritis konsep-konsep di luar modul seperti penggunaan `context.WithTimeout` untuk mencegah *resource exhaustion*, mekanisme *Graceful Shutdown*, konsep *Log Rotation* menggunakan Lumberjack, pola *Closure* pada *middleware*, hingga *Sentinel Errors* menggunakan `errors.Is()`.
+- **Pemahaman Alur Kerja Baru:** Membantu memetakan ulang alur permintaan (*request flow*) dari API yang tadinya *flat* menjadi terstruktur sesuai pembagian tanggung jawab (*routing* → *middleware* → *controller* → *business rules* → *repository*).
+- **Code Review & Audit Proyek:** AI digunakan untuk mengaudit dan mengevaluasi proyek `latihan-fiber` dan `api-students` terhadap standar modul. AI berhasil mendeteksi *bug* tersembunyi serta menemukan *file* lama yang belum terhapus.
+- **Refactoring & Perbaikan Kode:** Membantu menerapkan solusi untuk menyelesaikan seluruh *bug* hasil audit, memandu perbaikan logika pada fungsi `ApplyPatch`, serta memperbarui dokumentasi proyek di `README.md` dan `.gitignore` agar mencerminkan struktur yang baru.
+
+### 📚 Referensi Eksternal
+Selain modul dan bantuan AI, referensi eksternal berikut juga digunakan untuk mendukung pengerjaan tugas:
+1. **Dokumentasi Resmi Golang (Package `log/slog`)**: Digunakan untuk mempelajari cara implementasi *structured logging* bawaan Go.
+   - Tautan: [https://pkg.go.dev/log/slog](https://pkg.go.dev/log/slog)
+2. **Dokumentasi Pustaka Lumberjack (v2)**: Digunakan untuk mempelajari konfigurasi rotasi *file log* otomatis (berdasarkan ukuran, usia, dan batas pencadangan).
+   - Tautan: [https://pkg.go.dev/gopkg.in/natefinch/lumberjack.v2](https://pkg.go.dev/gopkg.in/natefinch/lumberjack.v2)
+3. **Dokumentasi Resmi Golang (Package `path/filepath`)**: Digunakan untuk memahami manipulasi lintasan (*path*) direktori secara aman lintas sistem operasi saat mengonfigurasi lokasi *file log*.
+   - Tautan: [https://pkg.go.dev/path/filepath](https://pkg.go.dev/path/filepath)
+4. **Dokumentasi Resmi Golang (Package `os`)**: Digunakan untuk memahami interaksi langsung dengan sistem operasi, seperti pembuatan folder (`MkdirAll`), penanganan sinyal terminasi (`os.Signal`), dan keluar program (`os.Exit`).
+   - Tautan: [https://pkg.go.dev/os](https://pkg.go.dev/os)
+5. **Dokumentasi Resmi Golang (Package `io`)**: Digunakan untuk mempelajari antarmuka I/O primitif, khususnya pola `MultiWriter` yang memungkinkan output log ditulis serentak ke layar (terminal) dan *file*.
+   - Tautan: [https://pkg.go.dev/io](https://pkg.go.dev/io)

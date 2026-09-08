@@ -8,8 +8,8 @@ Repositori ini berisi tugas Praktikum Pemrograman Backend Lanjut.
 |--------|-----------|-----------|
 | `latihan-syntax/` | Latihan sintaks dasar Go | TM1 |
 | `latihan-dasar/` | Tugas mandiri: variabel, pointer, struct | TM1 |
-| `latihan-fiber/` | Latihan web framework Fiber + database | TM1 → TM3 |
-| `api-students/` | REST API mahasiswa (tugas mandiri) | TM2 → TM3 |
+| `latihan-fiber/` | Latihan web framework Fiber + database | TM1 → TM4 |
+| `api-students/` | REST API mahasiswa (tugas mandiri) | TM2 → TM4 |
 
 ---
 
@@ -86,6 +86,44 @@ go run .
 
 Akses `http://localhost:3000/api/v1/health` untuk memastikan server dan database terhubung.
 
+#### 5. Jalankan unit test
+
+```bash
+cd api-students
+go test ./app/service/... -v
+```
+
+---
+
+## Struktur Proyek (Clean Architecture — TM4)
+
+Mulai pertemuan 4, proyek `api-students` dan `latihan-fiber` direstrukturisasi mengikuti prinsip Clean Architecture:
+
+```
+api-students/
+├── app/
+│   ├── model/          struct entitas dan bentuk request-response
+│   ├── repository/     query ke tabel students
+│   └── service/        business rules dan penerima fiber.Ctx
+├── config/             app.go, env.go, logger.go
+├── database/           koneksi PostgreSQL
+├── helper/             response envelope dan pembaca query string
+├── logs/               output log (tidak di-commit)
+├── middleware/          middleware global dan RequireJSON
+├── route/              pendaftaran route
+├── .env                (tidak di-commit)
+└── main.go
+```
+
+### Pemetaan ke Layer Clean Architecture
+
+| Layer | Folder |
+|-------|--------|
+| 1. Entities | `app/model/` |
+| 2. Use Cases | `app/service/` — bagian business rules (`student_rules.go`) |
+| 3. Interface Adapters | `app/repository/` (gateway), `helper/` (presenter), `app/service/` (controller) |
+| 4. Frameworks & Drivers | `config/`, `database/`, `middleware/`, `route/`, `main.go` |
+
 ---
 
 ## Skema Tabel Students
@@ -124,7 +162,9 @@ CREATE INDEX IF NOT EXISTS students_name_lower_idx
 
 | Variabel | Keterangan | Contoh |
 |----------|------------|--------|
+| `APP_NAME` | Nama aplikasi | `Praktikum Backend Lanjut` |
 | `APP_PORT` | Port aplikasi | `3000` |
+| `LOG_LEVEL` | Level log: `debug`, `info`, `warn`, `error` | `info` |
 | `DB_HOST` | Host PostgreSQL | `localhost` |
 | `DB_PORT` | Port PostgreSQL | `5432` |
 | `DB_USER` | Username database | `postgres` |
