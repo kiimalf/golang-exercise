@@ -13,7 +13,7 @@ func TestValidateRegister_PasswordTooShort(t *testing.T) {
 		Password: "abc",
 	}
 	errs := ValidateRegister(req)
-	if errs["password"] != "minimal 8 karakter" {
+	if errs["password"] != "Minimal 8 karakter" {
 		t.Errorf("Harap error 'minimal 8 karakter', dapat %q", errs["password"])
 	}
 }
@@ -25,7 +25,7 @@ func TestValidateRegister_PasswordNoDigit(t *testing.T) {
 		Password: "passwordrahasia",
 	}
 	errs := ValidateRegister(req)
-	if errs["password"] != "harus memuat huruf dan angka" {
+	if errs["password"] != "Harus memuat huruf dan angka" {
 		t.Errorf("Harap error 'harus memuat huruf dan angka', dapat %q", errs["password"])
 	}
 }
