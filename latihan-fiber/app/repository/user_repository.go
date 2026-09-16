@@ -20,6 +20,7 @@ var (
 type UserRepository interface {
 	FindAll(ctx context.Context, q model.ListQuery) ([]model.User, int, error)
 	FindByID(ctx context.Context, id int) (model.User, error)
+	FindByUsername(ctx context.Context, username string) (model.User, error)
 	Create(ctx context.Context, u model.User) (model.User, error)
 	Update(ctx context.Context, u model.User) (model.User, error)
 	Delete(ctx context.Context, id int) error
@@ -75,7 +76,7 @@ func (r *userPostgresRepository) FindAll(
 	}
 
 	sqlText := fmt.Sprintf(
-		`SELECT id, username, email, password, is_active, created_at
+		`SELECT id, username, email, password, role, is_active, created_at
 		FROM users%s
 		ORDER BY %s %s
 		LIMIT $%d OFFSET $%d`,
@@ -92,7 +93,7 @@ func (r *userPostgresRepository) FindAll(
 	hasil := []model.User{}
 	for rows.Next() {
 		var u model.User
-		if err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.Password,
+		if err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.Role,
 			&u.IsActive, &u.CreatedAt); err != nil {
 			return nil, 0, fmt.Errorf("Membaca baris user: %w", err)
 		}
@@ -111,9 +112,29 @@ func (r *userPostgresRepository) FindByID(
 	var u model.User
 
 	err := r.pool.QueryRow(ctx,
-		`SELECT id, username, email, password, is_active, created_at
+		`SELECT id, username, email, password, role, is_active, created_at
 		FROM users WHERE id = $1`, id,
-	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.IsActive, &u.CreatedAt)
+	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.Role, &u.IsActive, &u.CreatedAt)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.User{}, ErrNotFound
+		}
+		return model.User{}, fmt.Errorf("Mengambil user: %w", err)
+	}
+
+	return u, nil
+}
+
+func (r *userPostgresRepository) FindByUsername(
+	ctx context.Context, username string,
+) (model.User, error) {
+	var u model.User
+
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, username, email, password, role, is_active, created_at
+		FROM users WHERE LOWER(username) = LOWER($1)`, username,
+	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.Role, &u.IsActive, &u.CreatedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -151,9 +172,9 @@ func (r *userPostgresRepository) Update(
 	err := r.pool.QueryRow(ctx,
 		`UPDATE users SET username = $1, email = $2, is_active = $3
 		WHERE id = $4
-		RETURNING id, username, email, password, is_active, created_at`,
+		RETURNING id, username, email, password, role, is_active, created_at`,
 		u.Username, u.Email, u.IsActive, u.ID,
-	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.IsActive, &u.CreatedAt)
+	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.Role, &u.IsActive, &u.CreatedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
