@@ -88,3 +88,37 @@ Selain modul dan bantuan AI, referensi eksternal berikut juga digunakan untuk me
    - Tautan: [https://pkg.go.dev/os](https://pkg.go.dev/os)
 5. **Dokumentasi Resmi Golang (Package `io`)**: Digunakan untuk mempelajari antarmuka I/O primitif, khususnya pola `MultiWriter` yang memungkinkan output log ditulis serentak ke layar (terminal) dan *file*.
    - Tautan: [https://pkg.go.dev/io](https://pkg.go.dev/io)
+
+---
+
+## Pertemuan 5 (TM 5)
+
+### 🤖 Bantuan AI
+Dalam pengerjaan TM 5, AI digunakan sebagai tutor arsitektur keamanan, *code reviewer*, serta asisten pengujian, dengan rincian sebagai berikut:
+- **Penjelasan Modul & Konsep Keamanan:** Membantu membedah isi modul mengenai autentikasi vs otorisasi, cara kerja *hashing* password menggunakan Bcrypt (salt dan cost factor), struktur token JWT, serta pertimbangan penyimpanan token (*localStorage* vs *httpOnly cookie*).
+- **Eksplorasi Konsep Tambahan:** Menjelaskan secara teoritis topik keamanan lanjutan di luar modul, seperti perbandingan Bcrypt vs Argon2id, mitigasi serangan *Algorithm Confusion* (`alg: none`), *Timing Attack*, *Mass Assignment*, dan mekanisme rotasi *refresh token*.
+- **Code Review & Debugging:** AI digunakan untuk mengevaluasi kode dan menemukan kendala, seperti perbaikan sintaks pada migrasi SQL, *case sensitivity* pada unit test pesan error validasi password, serta memastikan fungsi validasi bersifat *pure function*.
+
+### 📚 Referensi Eksternal
+Selain modul dan bantuan AI, referensi eksternal berikut juga digunakan untuk mendukung pengerjaan tugas:
+1. **Dokumentasi golang-jwt (v5)**: Digunakan untuk mempelajari pembuatan, penandatanganan, dan parsing JSON Web Token (JWT).
+   - Tautan: [https://pkg.go.dev/github.com/golang-jwt/jwt/v5](https://pkg.go.dev/github.com/golang-jwt/jwt/v5)
+2. **Dokumentasi golang-jwt (README)**: Digunakan sebagai panduan implementasi dan contoh penggunaan pustaka `jwt/v5`.
+   - Tautan: [https://pkg.go.dev/github.com/golang-jwt/jwt/v5#section-readme](https://pkg.go.dev/github.com/golang-jwt/jwt/v5#section-readme)
+3. **Dokumentasi bcrypt**: Digunakan untuk memahami fungsi hash password adaptif `GenerateFromPassword` dan `CompareHashAndPassword`.
+   - Tautan: [https://pkg.go.dev/golang.org/x/crypto/bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt)
+4. **Dokumentasi crypto/sha256**: Digunakan untuk implementasi hashing SHA-256 pada penyimpanan string refresh token.
+   - Tautan: [https://pkg.go.dev/crypto/sha256](https://pkg.go.dev/crypto/sha256)
+5. **Dokumentasi crypto/rand**: Digunakan untuk menghasilkan byte acak berbasis kriptografi yang aman saat membuat refresh token.
+   - Tautan: [https://pkg.go.dev/crypto/rand](https://pkg.go.dev/crypto/rand)
+6. **Dokumentasi encoding/hex**: Digunakan untuk mengubah representasi byte acak dan hash menjadi string heksadesimal.
+   - Tautan: [https://pkg.go.dev/encoding/hex](https://pkg.go.dev/encoding/hex)
+7. **Dokumentasi errors**: Digunakan untuk mencocokkan jenis error menggunakan `errors.Is()` pada penanganan token kedaluwarsa vs tidak valid.
+   - Tautan: [https://pkg.go.dev/errors](https://pkg.go.dev/errors)
+8. **Dokumentasi crypto**: Digunakan sebagai referensi standar antarmuka kriptografi bawaan Go.
+   - Tautan: [https://pkg.go.dev/crypto](https://pkg.go.dev/crypto)
+9. **Dokumentasi builtin (make)**: Digunakan untuk memahami alokasi slice byte penampung data acak.
+   - Tautan: [https://pkg.go.dev/builtin#make](https://pkg.go.dev/builtin#make)
+10. **Dokumentasi builtin**: Digunakan sebagai referensi tipe data dan fungsi dasar bawaan Go.
+    - Tautan: [https://pkg.go.dev/builtin](https://pkg.go.dev/builtin)
+
