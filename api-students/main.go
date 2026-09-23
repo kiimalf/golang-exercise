@@ -56,7 +56,7 @@ func main() {
 	logger.Info("Permission dimuat", slog.Any("roles", permissions.KnownRoles()))
 
 	userService := service.NewUserService(userRepository, permissions)
-	studentService := service.NewStudentService(studentRepository)
+	studentService := service.NewStudentService(studentRepository, permissions)
 	authService := service.NewAuthService(
 		userRepository, tokenRepository, jwtManager, permissions,
 		time.Duration(config.GetEnvInt("JWT_REFRESH_TTL_DAYS", 7))*24*time.Hour,
