@@ -12,9 +12,20 @@ import (
 )
 
 type UserRepository interface {
+	FindAll(ctx context.Context, q model.ListQuery) ([]model.User, int, error)
 	FindByID(ctx context.Context, id int) (model.User, error)
 	FindByUsername(ctx context.Context, username string) (model.User, error)
 	Create(ctx context.Context, u model.User) (model.User, error)
+	Update(ctx context.Context, u model.User) (model.User, error)
+	UpdateRole(ctx context.Context, id int, role string) (model.User, error)
+	Delete(ctx context.Context, id int) error
+}
+
+var kolomUrutUser = map[string]string{
+	"id":         "id",
+	"username":   "username",
+	"email":      "email",
+	"created_at": "created_at",
 }
 
 type userPostgresRepository struct {
@@ -23,6 +34,71 @@ type userPostgresRepository struct {
 
 func NewUserRepository(pool *pgxpool.Pool) UserRepository {
 	return &userPostgresRepository{pool: pool}
+}
+
+func buildUserFilter(q model.ListQuery) (string, []any) {
+	where := " WHERE 1 = 1"
+	args := []any{}
+
+	if q.Search != "" {
+		where += fmt.Sprintf(" AND (username ILIKE $%d OR email ILIKE $%d)",
+			len(args)+1, len(args)+1)
+		args = append(args, "%"+q.Search+"%")
+	}
+
+	if q.IsActive != nil {
+		where += fmt.Sprintf(" AND is_active = $%d", len(args)+1)
+		args = append(args, *q.IsActive)
+	}
+
+	return where, args
+}
+
+func (r *userPostgresRepository) FindAll(
+	ctx context.Context, q model.ListQuery,
+) ([]model.User, int, error) {
+	where, args := buildUserFilter(q)
+
+	var total int
+	err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM users"+where, args...).Scan(&total)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Meghitung user: %w", err)
+	}
+
+	arah := "ASC"
+	if q.Order == "desc" {
+		arah = "DESC"
+	}
+
+	sqlText := fmt.Sprintf(
+		`SELECT id, username, email, password, role, is_active, created_at
+		FROM users%s
+		ORDER BY %s %s
+		LIMIT $%d OFFSET $%d`,
+		where, kolomUrutUser[q.Sort], arah, len(args)+1, len(args)+2,
+	)
+	args = append(args, q.Limit, q.Offset())
+
+	rows, err := r.pool.Query(ctx, sqlText, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Mengambil daftar user: %w", err)
+	}
+	defer rows.Close()
+
+	hasil := []model.User{}
+	for rows.Next() {
+		var u model.User
+		if err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.Role,
+			&u.IsActive, &u.CreatedAt); err != nil {
+			return nil, 0, fmt.Errorf("Membaca baris user: %w", err)
+		}
+		hasil = append(hasil, u)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("Membaca hasil query: %w", err)
+	}
+
+	return hasil, total, nil
 }
 
 func (r *userPostgresRepository) FindByID(
@@ -83,4 +159,62 @@ func (r *userPostgresRepository) Create(
 	}
 
 	return u, nil
+}
+
+func (r *userPostgresRepository) Update(
+	ctx context.Context, u model.User,
+) (model.User, error) {
+	err := r.pool.QueryRow(ctx,
+		`UPDATE users SET username = $1, email = $2, is_active = $3
+		WHERE id = $4
+		RETURNING id, username, email, password, role, is_active, created_at`,
+		u.Username, u.Email, u.IsActive, u.ID,
+	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.Role, &u.IsActive, &u.CreatedAt)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.User{}, ErrNotFound
+		}
+		if isUniqueViolation(err) {
+			return model.User{}, ErrDuplicate
+		}
+		return model.User{}, fmt.Errorf("Memperbarui user: %w", err)
+	}
+
+	return u, nil
+}
+
+func (r *userPostgresRepository) UpdateRole(
+	ctx context.Context, id int, role string,
+) (model.User, error) {
+	var u model.User
+	err := r.pool.QueryRow(ctx,
+		`UPDATE users SET role = $1 
+        WHERE id = $2
+        RETURNING id, username, email, password, role, is_active, created_at`,
+		role, id,
+	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.Role, &u.IsActive, &u.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.User{}, ErrNotFound
+		}
+		return model.User{}, fmt.Errorf("Mengubah role user: %w", err)
+	}
+	return u, nil
+}
+
+func (r *userPostgresRepository) Delete(ctx context.Context, id int) error {
+	tag, err := r.pool.Exec(ctx,
+		`DELETE FROM users
+		WHERE id = $1`,
+		id)
+	if err != nil {
+		return fmt.Errorf("Menghapus user: %w", err)
+	}
+
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
