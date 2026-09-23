@@ -13,11 +13,15 @@ import (
 )
 
 type UserService struct {
-	repo repository.UserRepository
+	repo  repository.UserRepository
+	perms *helper.PermissionSet
 }
 
-func NewUserService(repo repository.UserRepository) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(
+	repo repository.UserRepository,
+	perms *helper.PermissionSet,
+) *UserService {
+	return &UserService{repo: repo, perms: perms}
 }
 
 func (s *UserService) List(c *fiber.Ctx) error {
@@ -44,9 +48,19 @@ func (s *UserService) Get(c *fiber.Ctx) error {
 	ctx, cancel := helper.RequestContext(c)
 	defer cancel()
 
+	current, ok := helper.CurrentUser(c)
+	if !ok {
+		return helper.Fail(c, fiber.StatusUnauthorized, "Belum terautentikasi")
+	}
+
 	id, valid := helper.ParamId(c)
 	if !valid {
 		return helper.Fail(c, fiber.StatusBadRequest, "Id harus berupa angka positif")
+	}
+
+	if !CanAccessUser(current, id, s.perms, "user:read:any") {
+		return helper.Fail(c, fiber.StatusForbidden,
+			"Tidak berhak mengakses data user lain")
 	}
 
 	user, err := s.repo.FindByID(ctx, id)
@@ -93,9 +107,19 @@ func (s *UserService) Replace(c *fiber.Ctx) error {
 	ctx, cancel := helper.RequestContext(c)
 	defer cancel()
 
+	current, ok := helper.CurrentUser(c)
+	if !ok {
+		return helper.Fail(c, fiber.StatusUnauthorized, "Belum terautentikasi")
+	}
+
 	id, valid := helper.ParamId(c)
 	if !valid {
 		return helper.Fail(c, fiber.StatusBadRequest, "Id harus berupa angka positif")
+	}
+
+	if !CanAccessUser(current, id, s.perms, "user:update:any") {
+		return helper.Fail(c, fiber.StatusForbidden,
+			"Tidak berhak mengakses data user lain")
 	}
 
 	var req model.ReplaceUserRequest
@@ -129,9 +153,19 @@ func (s *UserService) Patch(c *fiber.Ctx) error {
 	ctx, cancel := helper.RequestContext(c)
 	defer cancel()
 
+	currentUser, ok := helper.CurrentUser(c)
+	if !ok {
+		return helper.Fail(c, fiber.StatusUnauthorized, "Belum terautentikasi")
+	}
+
 	id, valid := helper.ParamId(c)
 	if !valid {
 		return helper.Fail(c, fiber.StatusBadRequest, "Id harus berupa angka positif")
+	}
+
+	if !CanAccessUser(currentUser, id, s.perms, "user:update:any") {
+		return helper.Fail(c, fiber.StatusForbidden,
+			"Tidak berhak mengakses data user lain")
 	}
 
 	var req model.PatchUserRequest
@@ -144,12 +178,12 @@ func (s *UserService) Patch(c *fiber.Ctx) error {
 		return helper.Fail(c, fiber.StatusBadRequest, "Tidak ada field yang diubah")
 	}
 
-	current, err := s.repo.FindByID(ctx, id)
+	targetUser, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		return translateError(c, err, "Gagal mengambil user")
 	}
 
-	updated, errs := ApplyPatch(current, req)
+	updated, errs := ApplyPatch(targetUser, req)
 	if len(errs) > 0 {
 		return helper.FailValidation(c, errs)
 	}
@@ -162,13 +196,54 @@ func (s *UserService) Patch(c *fiber.Ctx) error {
 	return helper.Success(c, fiber.StatusOK, "User berhasil diperbarui sebagian", result)
 }
 
-func (s *UserService) Delete(c *fiber.Ctx) error {
+func (s *UserService) AssignRole(c *fiber.Ctx) error {
 	ctx, cancel := helper.RequestContext(c)
 	defer cancel()
+
+	currentUser, ok := helper.CurrentUser(c)
+	if !ok {
+		return helper.Fail(c, fiber.StatusUnauthorized, "Belum terautentikasi")
+	}
 
 	id, valid := helper.ParamId(c)
 	if !valid {
 		return helper.Fail(c, fiber.StatusBadRequest, "Id harus berupa angka positif")
+	}
+
+	var req model.AssignRoleRequest
+	if err := c.BodyParser(&req); err != nil {
+		return helper.Fail(c, fiber.StatusBadRequest, "Body harus berupa JSON yang valid")
+	}
+
+	if errs := ValidateAssignRole(currentUser, id, req, s.perms); len(errs) > 0 {
+		return helper.FailValidation(c, errs)
+	}
+
+	result, err := s.repo.UpdateRole(ctx, id, strings.TrimSpace(req.Role))
+	if err != nil {
+		return translateError(c, err, "Gagal mengubah role user")
+	}
+
+	return helper.Success(c, fiber.StatusOK, "Role user berhasil diubah", result)
+}
+
+func (s *UserService) Delete(c *fiber.Ctx) error {
+	ctx, cancel := helper.RequestContext(c)
+	defer cancel()
+
+	current, ok := helper.CurrentUser(c)
+	if !ok {
+		return helper.Fail(c, fiber.StatusUnauthorized, "Belum terautentikasi")
+	}
+
+	id, valid := helper.ParamId(c)
+	if !valid {
+		return helper.Fail(c, fiber.StatusBadRequest, "Id harus berupa angka positif")
+	}
+
+	if current.UserID == id {
+		return helper.Fail(c, fiber.StatusForbidden,
+			"Tidak boleh menghapus akun sendiri")
 	}
 
 	if err := s.repo.Delete(ctx, id); err != nil {
