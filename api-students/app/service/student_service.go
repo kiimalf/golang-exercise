@@ -93,8 +93,8 @@ func (s *StudentService) Create(c *fiber.Ctx) error {
 	req.Name = strings.TrimSpace(req.Name)
 	req.NIM = strings.TrimSpace(req.NIM)
 
-	if errs := ValidateCreate(req); len(errs) > 0 {
-		return helper.FailValidation(c, errs)
+	if errs := helper.ValidateStruct(req); errs != nil {
+		return helper.Validation(errs)
 	}
 
 	newStudent, err := s.repo.Create(ctx, model.Student{
@@ -102,7 +102,7 @@ func (s *StudentService) Create(c *fiber.Ctx) error {
 		Name:     req.Name,
 		NIM:      req.NIM,
 		Grade:    req.Grade,
-		IsActive: req.IsActive,
+		IsActive: true,
 	})
 	if err != nil {
 		return translateError(c, err, "Gagal menyimpan Student")
@@ -146,8 +146,8 @@ func (s *StudentService) Replace(c *fiber.Ctx) error {
 			"Body harus berupa JSON yang valid")
 	}
 
-	if errs := ValidateReplace(req); len(errs) > 0 {
-		return helper.FailValidation(c, errs)
+	if errs := helper.ValidateStruct(req); errs != nil {
+		return helper.Validation(errs)
 	}
 
 	result, err := s.repo.Update(ctx, model.Student{
@@ -185,7 +185,7 @@ func (s *StudentService) Patch(c *fiber.Ctx) error {
 	}
 
 	if IsEmptyPatch(req) {
-		return helper.Fail(c, fiber.StatusBadRequest, "Tidak ada field yang diubah")
+		return helper.BadRequest("Tidak ada field yang diubah")
 	}
 
 	currentStudent, err := s.repo.FindByID(ctx, id)
@@ -202,10 +202,11 @@ func (s *StudentService) Patch(c *fiber.Ctx) error {
 			"tidak berhak mengubah data student milik orang lain")
 	}
 
-	updated, errs := ApplyPatch(currentStudent, req)
-	if len(errs) > 0 {
-		return helper.FailValidation(c, errs)
+	if errs := helper.ValidateStruct(req); errs != nil {
+		return helper.Validation(errs)
 	}
+
+	updated := ApplyPatch(currentStudent, req)
 
 	result, err := s.repo.Update(ctx, updated)
 	if err != nil {

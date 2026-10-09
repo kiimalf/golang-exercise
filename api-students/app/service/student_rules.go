@@ -6,78 +6,26 @@ import (
 	"api-students/app/model"
 )
 
-func ValidateCreate(req model.CreateStudentRequest) map[string]string {
-	errs := map[string]string{}
-
-	req.Name = strings.TrimSpace(req.Name)
-	req.NIM = strings.TrimSpace(req.NIM)
-
-	if req.Name == "" {
-		errs["name"] = "Wajib diisi"
-	}
-	if req.NIM == "" {
-		errs["nim"] = "Wajib diisi"
-	}
-	if req.Grade < 0 || req.Grade > 100 {
-		errs["grade"] = "Harus antara 0 dan 100"
-	}
-
-	return errs
-}
-
-func ValidateReplace(req model.ReplaceStudentRequest) map[string]string {
-	errs := map[string]string{}
-
-	req.Name = strings.TrimSpace(req.Name)
-	req.NIM = strings.TrimSpace(req.NIM)
-
-	if req.Name == "" {
-		errs["name"] = "Wajib diisi pada PUT"
-	}
-	if req.NIM == "" {
-		errs["nim"] = "Wajib diisi pada PUT"
-	}
-	if req.Grade < 0 || req.Grade > 100 {
-		errs["grade"] = "Harus antara 0 dan 100"
-	}
-
-	return errs
-}
-
 func ApplyPatch(
 	current model.Student, req model.PatchStudentRequest,
-) (model.Student, map[string]string) {
-	errs := map[string]string{}
-
+) model.Student {
 	if req.Name != nil {
-		if strings.TrimSpace(*req.Name) == "" {
-			errs["name"] = "Tidak boleh kosong"
-		} else {
-			current.Name = *req.Name
-		}
+		current.Name = strings.TrimSpace(*req.Name)
 	}
 
 	if req.NIM != nil {
-		if strings.TrimSpace(*req.NIM) == "" {
-			errs["nim"] = "Tidak boleh kosong"
-		} else {
-			current.NIM = *req.NIM
-		}
+		current.NIM = strings.TrimSpace(*req.NIM)
 	}
 
 	if req.Grade != nil {
-		if *req.Grade < 0 || *req.Grade > 100 {
-			errs["grade"] = "Harus antara 0 dan 100"
-		} else {
-			current.Grade = *req.Grade
-		}
+		current.Grade = *req.Grade
 	}
 
 	if req.IsActive != nil {
 		current.IsActive = *req.IsActive
 	}
 
-	return current, errs
+	return current
 }
 
 func IsEmptyPatch(req model.PatchStudentRequest) bool {

@@ -2,6 +2,7 @@ package service
 
 import (
 	"api-students/app/model"
+	"api-students/helper"
 	"testing"
 )
 
@@ -32,13 +33,10 @@ func TestApplyPatch(t *testing.T) {
 	}
 	inactive := false
 
-	result, errs := ApplyPatch(initial, model.PatchStudentRequest{
+	result := ApplyPatch(initial, model.PatchStudentRequest{
 		IsActive: &inactive,
 	})
 
-	if len(errs) != 0 {
-		t.Fatalf("Tidak seharusnya ada error: %v", errs)
-	}
 	if result.IsActive {
 		t.Error("is_active seharusnya berubah menjadi false")
 	}
@@ -48,11 +46,10 @@ func TestApplyPatch(t *testing.T) {
 }
 
 func TestValidateCreate(t *testing.T) {
-	errs := ValidateCreate(model.CreateStudentRequest{
-		Name:     "andi",
-		NIM:      "123",
-		Grade:    19,
-		IsActive: true,
+	errs := helper.ValidateStruct(model.CreateStudentRequest{
+		Name:  "andi",
+		NIM:   "123456789",
+		Grade: 19,
 	})
 
 	if len(errs) != 0 {
