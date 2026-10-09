@@ -60,8 +60,7 @@ func healthCheck(pool *pgxpool.Pool) fiber.Handler {
 		defer cancel()
 
 		if err := pool.Ping(ctx); err != nil {
-			return helper.Fail(c, fiber.StatusServiceUnavailable,
-				"Database tidak dapat dihubungi")
+			return helper.ServiceUnavailable("Database tidak dapat dihubungi")
 		}
 
 		return helper.Success(c, fiber.StatusOK, "Server dan database berjalan", nil)
