@@ -63,3 +63,36 @@ func ParseListQuery(c *fiber.Ctx) model.ListQuery {
 
 	return q
 }
+
+func ParseCursorQuery(c *fiber.Ctx) (model.CursorQuery, error) {
+	limit := c.QueryInt("limit", 10)
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	q := model.CursorQuery{
+		Limit:  limit,
+		Search: strings.TrimSpace(c.Query("search")),
+	}
+
+	if raw := c.Query("is_active"); raw != "" {
+		if v, err := strconv.ParseBool(raw); err == nil {
+			q.IsActive = &v
+		} else {
+			return q, BadRequest("is_active harus berupa boolean")
+		}
+	}
+
+	if rawCursor := strings.TrimSpace(c.Query("cursor")); rawCursor != "" {
+		cursor, err := DecodeCursor(rawCursor)
+		if err != nil {
+			return q, BadRequest("Cursor tidak valid")
+		}
+		q.After = &cursor
+	}
+
+	return q, nil
+}
