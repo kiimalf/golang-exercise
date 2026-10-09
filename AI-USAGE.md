@@ -122,3 +122,26 @@ Selain modul dan bantuan AI, referensi eksternal berikut juga digunakan untuk me
 10. **Dokumentasi builtin**: Digunakan sebagai referensi tipe data dan fungsi dasar bawaan Go.
     - Tautan: [https://pkg.go.dev/builtin](https://pkg.go.dev/builtin)
 
+---
+
+## Pertemuan 6 (TM 6)
+
+### 🤖 Bantuan AI
+Dalam pengerjaan TM 6, AI digunakan sebagai tutor arsitektur keamanan, *code reviewer*, perancang panduan tugas mandiri, serta asisten pengujian, dengan rincian sebagai berikut:
+- **Penjelasan Modul & Konsep Otorisasi:** Membantu membedah isi modul mengenai konsep otorisasi berbasis peran (*Role-Based Access Control* / RBAC), hierarki hubungan peran (*role*) dan hak akses (*permission*), pemetaan relasi *many-to-many* pada database relasional, prinsip evaluasi izin *fail-closed* dan *least privilege*, serta pentingnya auditabilitas keputusan akses (*audit logging*) menggunakan pola `RequestLogger`.
+- **Eksplorasi Konsep Tambahan:** Menjelaskan secara teoritis konsep-konsep keamanan dan arsitektur di luar modul, seperti perbedaan fundamental antara otorisasi berbasis identitas akun (*Identity-as-Resource*) dengan otorisasi berbasis kepemilikan relasional (*Resource-with-Owner*), alasan teknis mengapa pemeriksaan kepemilikan data tidak dapat dipindahkan ke *middleware* dan harus berada di *service layer*, pencegahan celah keamanan IDOR (*Insecure Direct Object References*) / BOLA (*Broken Object Level Authorization*), hingga keterbatasan model RBAC murni ketika berhadapan dengan relasi kontekstual dinamis sehingga membutuhkan model ABAC (*Attribute-Based Access Control*) atau ReBAC.
+- **Code Review & Debugging:** AI digunakan untuk mengevaluasi kode dan menemukan potensi kendala pada proyek, seperti mendeteksi redundansi pencatatan log manual di dalam *service* yang seharusnya ditangani secara terpusat oleh *middleware*, menemukan kolom `owner_id` yang terlewat pada klausul `RETURNING` dan pemindaian `Scan()` di metode *Update repository*, serta mengatasi konflik nama simbol ganda (*duplicate symbol*) pada *package repository* saat mengadopsi fitur dari `latihan-fiber`.
+- **Pengujian (Testing):** Membantu menyusun skrip pengujian otomatis dan perintah cURL komprehensif untuk memvalidasi matriks hak akses 3 peran (Admin, Staff, dan User biasa) di seluruh metode HTTP, serta menjalankan pengujian skenario negatif (seperti upaya manipulasi/pemalsuan `owner_id` pada payload POST dan percobaan pengubahan data milik pengguna lain).
+
+### 📚 Referensi Eksternal
+Selain modul dan bantuan AI, referensi eksternal berikut juga digunakan untuk mendukung pengerjaan tugas:
+1. **NIST Computer Security Resource Center (Role Based Access Control)**: Digunakan sebagai landasan teori utama untuk memahami standar model Role-Based Access Control, prinsip pemisahan antara subjek (*role*) dengan hak akses (*permission*), serta matriks pemetaannya.
+   - Tautan: [https://csrc.nist.gov/projects/role-based-access-control](https://csrc.nist.gov/projects/role-based-access-control)
+2. **OWASP Top 10 (A01:2021 – Broken Access Control)**: Digunakan untuk mempelajari risiko kerentanan kontrol akses pada aplikasi web yang menjadi motivasi utama penegakan otorisasi di level API.
+   - Tautan: [https://top10.owasp.org/2021/id/A01_2021-Broken_Access_Control/](https://top10.owasp.org/2021/id/A01_2021-Broken_Access_Control/)
+3. **OWASP Cheat Sheet Series (Authorization)**: Digunakan sebagai panduan praktik terbaik arsitektur otorisasi pada backend, penegakan prinsip *Least Privilege*, dan evaluasi hak akses di layer bisnis/service.
+   - Tautan: [https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html)
+4. **Dokumentasi Resmi PostgreSQL (DDL Constraints)**: Digunakan untuk mempelajari pendefinisian konstrain tabel, seperti *Foreign Key*, *Composite Primary Key* pada tabel perantara `role_permissions`, serta klausul integritas `ON DELETE CASCADE` dan `ON UPDATE CASCADE`.
+   - Tautan: [https://www.postgresql.org/docs/current/ddl-constraints.html](https://www.postgresql.org/docs/current/ddl-constraints.html)
+5. **Dokumentasi Resmi Golang (Package `sort`)**: Digunakan untuk mempelajari fungsi pengurutan `sort.Strings()` pada pustaka standar Go saat menyajikan daftar permission dan role secara terurut pada *helper* `PermissionSet`.
+   - Tautan: [https://pkg.go.dev/sort](https://pkg.go.dev/sort)
