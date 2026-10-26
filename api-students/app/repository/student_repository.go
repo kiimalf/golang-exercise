@@ -7,7 +7,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"api-students/app/model"
 )
@@ -18,6 +17,9 @@ var (
 )
 
 type StudentRepository interface {
+	WithTx(tx DBTX) StudentRepository
+	LockStudent(ctx context.Context, studentID int) error
+
 	FindAll(ctx context.Context, q model.ListQuery) ([]model.Student, int, error)
 	FindAfterCursor(ctx context.Context, q model.CursorQuery) ([]model.Student, error)
 	FindByID(ctx context.Context, id int) (model.Student, error)
@@ -33,12 +35,20 @@ var kolomUrut = map[string]string{
 	"grade": "grade",
 }
 
+const studentColumns = `id, owner_id, name, nim, grade, is_active, created_at`
+
 type studentPostgresRepository struct {
-	pool *pgxpool.Pool
+	db DBTX
 }
 
-func NewStudentRepository(pool *pgxpool.Pool) StudentRepository {
-	return &studentPostgresRepository{pool: pool}
+func NewStudentRepository(db DBTX) StudentRepository {
+	return &studentPostgresRepository{db: db}
+}
+
+func scanStudent(row pgx.Row) (model.Student, error) {
+	var s model.Student
+	err := row.Scan(&s.ID, &s.OwnerID, &s.Name, &s.NIM, &s.Grade, &s.IsActive, &s.CreatedAt)
+	return s, err
 }
 
 func buildFilter(q model.ListQuery) (string, []any) {
@@ -59,13 +69,33 @@ func buildFilter(q model.ListQuery) (string, []any) {
 	return where, args
 }
 
+func (r *studentPostgresRepository) WithTx(tx DBTX) StudentRepository {
+	return &studentPostgresRepository{db: tx}
+}
+
+func (r *studentPostgresRepository) LockStudent(ctx context.Context, studentID int) error {
+	var id int
+	err := r.db.QueryRow(ctx,
+		`SELECT id FROM students 
+		WHERE id = $1 FOR UPDATE`, studentID,
+	).Scan(&id)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNotFound
+		}
+		return fmt.Errorf("Mengunci data mahasiswa: %w", err)
+	}
+	return nil
+}
+
 func (r *studentPostgresRepository) FindAll(
 	ctx context.Context, q model.ListQuery,
 ) ([]model.Student, int, error) {
 	where, args := buildFilter(q)
 
 	var total int
-	err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM students"+where, args...).Scan(&total)
+	err := r.db.QueryRow(ctx, "SELECT COUNT(*) FROM students"+where, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Menghitung student: %w", err)
 	}
@@ -76,7 +106,7 @@ func (r *studentPostgresRepository) FindAll(
 	}
 
 	sqlText := fmt.Sprintf(
-		`SELECT id, owner_id, name, nim, grade, is_active, created_at
+		`SELECT `+studentColumns+`
 		FROM students%s
 		ORDER BY %s %s
 		LIMIT $%d OFFSET $%d`,
@@ -84,7 +114,7 @@ func (r *studentPostgresRepository) FindAll(
 	)
 	args = append(args, q.Limit, q.Offset())
 
-	rows, err := r.pool.Query(ctx, sqlText, args...)
+	rows, err := r.db.Query(ctx, sqlText, args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Mengambil daftar student: %w", err)
 	}
@@ -92,8 +122,8 @@ func (r *studentPostgresRepository) FindAll(
 
 	hasil := []model.Student{}
 	for rows.Next() {
-		var s model.Student
-		if err := rows.Scan(&s.ID, &s.OwnerID, &s.Name, &s.NIM, &s.Grade, &s.IsActive, &s.CreatedAt); err != nil {
+		s, err := scanStudent(rows)
+		if err != nil {
 			return nil, 0, fmt.Errorf("Membaca baris student: %w", err)
 		}
 		hasil = append(hasil, s)
@@ -128,14 +158,14 @@ func (r *studentPostgresRepository) FindAfterCursor(
 
 	args = append(args, q.Limit+1)
 	query := fmt.Sprintf(
-		`SELECT id, owner_id, name, nim, grade, is_active, created_at
+		`SELECT `+studentColumns+`
 		FROM students%s
 		ORDER BY created_at DESC, id DESC
 		LIMIT $%d`,
 		where, len(args),
 	)
 
-	rows, err := r.pool.Query(ctx, query, args...)
+	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("Mengambil data student: %w", err)
 	}
@@ -143,9 +173,8 @@ func (r *studentPostgresRepository) FindAfterCursor(
 
 	result := []model.Student{}
 	for rows.Next() {
-		var s model.Student
-		if err := rows.Scan(&s.ID, &s.OwnerID, &s.Name, &s.NIM, &s.Grade,
-			&s.IsActive, &s.CreatedAt); err != nil {
+		s, err := scanStudent(rows)
+		if err != nil {
 			return nil, fmt.Errorf("Membaca row student: %w", err)
 		}
 		result = append(result, s)
@@ -160,12 +189,9 @@ func (r *studentPostgresRepository) FindAfterCursor(
 func (r *studentPostgresRepository) FindByID(
 	ctx context.Context, id int,
 ) (model.Student, error) {
-	var s model.Student
-
-	err := r.pool.QueryRow(ctx,
-		`SELECT id, owner_id, name, nim, grade, is_active, created_at
-		FROM students WHERE id = $1`, id,
-	).Scan(&s.ID, &s.OwnerID, &s.Name, &s.NIM, &s.Grade, &s.IsActive, &s.CreatedAt)
+	s, err := scanStudent(r.db.QueryRow(ctx,
+		"SELECT "+studentColumns+" FROM students WHERE id = $1", id,
+	))
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -180,7 +206,7 @@ func (r *studentPostgresRepository) FindByID(
 func (r *studentPostgresRepository) Create(
 	ctx context.Context, s model.Student,
 ) (model.Student, error) {
-	err := r.pool.QueryRow(ctx,
+	err := r.db.QueryRow(ctx,
 		`INSERT INTO students (owner_id, name, nim, grade, is_active)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at`,
@@ -200,12 +226,12 @@ func (r *studentPostgresRepository) Create(
 func (r *studentPostgresRepository) Update(
 	ctx context.Context, s model.Student,
 ) (model.Student, error) {
-	err := r.pool.QueryRow(ctx,
+	s, err := scanStudent(r.db.QueryRow(ctx,
 		`UPDATE students SET name = $1, nim = $2, grade = $3, is_active = $4
 		WHERE id = $5
-		RETURNING id, name, nim, grade, is_active, owner_id, created_at`,
+		RETURNING `+studentColumns,
 		s.Name, s.NIM, s.Grade, s.IsActive, s.ID,
-	).Scan(&s.ID, &s.Name, &s.NIM, &s.Grade, &s.IsActive, &s.OwnerID, &s.CreatedAt)
+	))
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -221,7 +247,7 @@ func (r *studentPostgresRepository) Update(
 }
 
 func (r *studentPostgresRepository) Delete(ctx context.Context, id int) error {
-	tag, err := r.pool.Exec(ctx, `DELETE FROM students WHERE id = $1`, id)
+	tag, err := r.db.Exec(ctx, `DELETE FROM students WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("Menghapus student: %w", err)
 	}
